@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"series-api/routes"
 
 	"series-api/database"
 )
@@ -11,6 +12,7 @@ func main() {
 	// Conectar DB
 	database.Connect()
 	database.InitTables()
+	routes.SetupRoutes()
 
 	// Ruta de prueba
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

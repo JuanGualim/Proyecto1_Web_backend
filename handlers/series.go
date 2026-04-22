@@ -9,11 +9,15 @@ import (
 )
 
 func GetSeries(w http.ResponseWriter, r *http.Request) {
-	enableCORS(&w)
+	utils.EnableCORS(w)
 
 	rows, err := database.DB.Query("SELECT id, name, current_episode, total_episodes, image_url FROM series")
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, "Error fetching series")
+		return
+	}
+
+	if r.Method == http.MethodOptions {
 		return
 	}
 	defer rows.Close()
