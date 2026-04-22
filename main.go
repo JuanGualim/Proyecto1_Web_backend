@@ -10,6 +10,7 @@ import (
 func main() {
 	// Conectar DB
 	database.Connect()
+	database.InitTables()
 
 	// Ruta de prueba
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
