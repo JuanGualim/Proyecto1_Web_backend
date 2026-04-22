@@ -142,3 +142,84 @@ func GetSeriesByID(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSON(w, http.StatusOK, s)
 }
+
+func UpdateSeries(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCORS(w)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	if r.Method != http.MethodPut {
+		utils.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	// Obtener ID
+	idStr := strings.TrimPrefix(r.URL.Path, "/series/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	var s models.Series
+
+	err = json.NewDecoder(r.Body).Decode(&s)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid JSON")
+		return
+	}
+
+	// 🔍 Validaciones
+	if s.Name == "" {
+		utils.Error(w, http.StatusBadRequest, "Name is required")
+		return
+	}
+
+	if s.CurrentEpisode < 1 {
+		utils.Error(w, http.StatusBadRequest, "Current episode must be >= 1")
+		return
+	}
+
+	if s.TotalEpisodes < 1 {
+		utils.Error(w, http.StatusBadRequest, "Total episodes must be >= 1")
+		return
+	}
+
+	if s.CurrentEpisode > s.TotalEpisodes {
+		utils.Error(w, http.StatusBadRequest, "Current episode cannot exceed total episodes")
+		return
+	}
+
+	// 🛠 Update
+	query := `
+	UPDATE series
+	SET name=$1, current_episode=$2, total_episodes=$3, image_url=$4
+	WHERE id=$5
+	`
+
+	result, err := database.DB.Exec(
+		query,
+		s.Name,
+		s.CurrentEpisode,
+		s.TotalEpisodes,
+		s.ImageURL,
+		id,
+	)
+
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Error updating series")
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		utils.Error(w, http.StatusNotFound, "Series not found")
+		return
+	}
+
+	s.ID = id
+	utils.JSON(w, http.StatusOK, s)
+}
