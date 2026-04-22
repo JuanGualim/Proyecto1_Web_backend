@@ -18,5 +18,14 @@ func SetupRoutes() {
 		}
 	})
 
-	http.HandleFunc("/series/", handlers.GetSeriesByID)
+	http.HandleFunc("/series/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handlers.GetSeriesByID(w, r)
+		case http.MethodPut:
+			handlers.UpdateSeries(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 }
