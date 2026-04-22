@@ -1,0 +1,29 @@
+package database
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	"os"
+
+	_ "github.com/lib/pq"
+)
+
+var DB *sql.DB
+
+func Connect() {
+	connStr := os.Getenv("DATABASE_URL")
+
+	var err error
+	DB, err = sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal("Error opening DB:", err)
+	}
+
+	err = DB.Ping()
+	if err != nil {
+		log.Fatal("Error connecting to DB:", err)
+	}
+
+	fmt.Println("Connected to PostgreSQL")
+}
