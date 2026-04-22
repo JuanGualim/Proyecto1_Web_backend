@@ -17,4 +17,6 @@ func SetupRoutes() {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
+
+	http.HandleFunc("/series/", handlers.GetSeriesByID)
 }

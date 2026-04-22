@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"series-api/database"
 	"series-api/models"
@@ -100,4 +102,43 @@ func CreateSeries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSON(w, http.StatusCreated, s)
+}
+
+func GetSeriesByID(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCORS(w)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	// Obtener ID de la URL
+	idStr := strings.TrimPrefix(r.URL.Path, "/series/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	var s models.Series
+
+	query := `
+	SELECT id, name, current_episode, total_episodes, image_url
+	FROM series
+	WHERE id = $1
+	`
+
+	err = database.DB.QueryRow(query, id).Scan(
+		&s.ID,
+		&s.Name,
+		&s.CurrentEpisode,
+		&s.TotalEpisodes,
+		&s.ImageURL,
+	)
+
+	if err != nil {
+		utils.Error(w, http.StatusNotFound, "Series not found")
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, s)
 }
