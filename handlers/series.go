@@ -223,3 +223,43 @@ func UpdateSeries(w http.ResponseWriter, r *http.Request) {
 	s.ID = id
 	utils.JSON(w, http.StatusOK, s)
 }
+
+func DeleteSeries(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCORS(w)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	if r.Method != http.MethodDelete {
+		utils.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	// Obtener ID
+	idStr := strings.TrimPrefix(r.URL.Path, "/series/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	// 🗑 Eliminar
+	query := `DELETE FROM series WHERE id = $1`
+
+	result, err := database.DB.Exec(query, id)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Error deleting series")
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+
+	if rowsAffected == 0 {
+		utils.Error(w, http.StatusNotFound, "Series not found")
+		return
+	}
+
+	// ✔ 204 No Content (correcto en REST)
+	w.WriteHeader(http.StatusNoContent)
+}
