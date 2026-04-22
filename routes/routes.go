@@ -7,5 +7,14 @@ import (
 )
 
 func SetupRoutes() {
-	http.HandleFunc("/series", handlers.GetSeries)
+
+	http.HandleFunc("/series", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			handlers.GetSeries(w, r)
+		} else if r.Method == http.MethodPost {
+			handlers.CreateSeries(w, r)
+		} else {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 }
