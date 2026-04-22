@@ -24,6 +24,8 @@ func SetupRoutes() {
 			handlers.GetSeriesByID(w, r)
 		case http.MethodPut:
 			handlers.UpdateSeries(w, r)
+		case http.MethodDelete:
+			handlers.DeleteSeries(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
