@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"series-api/utils"
@@ -23,8 +24,8 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parsear form
-	err := r.ParseMultipartForm(2 << 20) // 2MB max
+	// Parsear form (máximo permitido por request)
+	err := r.ParseMultipartForm(2 << 20) // 2MB
 	if err != nil {
 		utils.Error(w, http.StatusBadRequest, "File too large")
 		return
@@ -36,6 +37,18 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
+	if handler.Size > 1<<20 {
+		utils.Error(w, http.StatusBadRequest, "File too large (max 1MB)")
+		return
+	}
+
+	// 🔥 VALIDACIÓN DE TIPO (opcional pero recomendado)
+	contentType := handler.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		utils.Error(w, http.StatusBadRequest, "Only image files are allowed")
+		return
+	}
 
 	// Generar nombre único
 	ext := filepath.Ext(handler.Filename)
