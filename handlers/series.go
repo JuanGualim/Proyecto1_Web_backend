@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,13 +15,71 @@ import (
 func GetSeries(w http.ResponseWriter, r *http.Request) {
 	utils.EnableCORS(w)
 
-	rows, err := database.DB.Query("SELECT id, name, current_episode, total_episodes, image_url FROM series")
-	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, "Error fetching series")
+	if r.Method == http.MethodOptions {
 		return
 	}
 
-	if r.Method == http.MethodOptions {
+	// 🔎 Query params
+	queryParams := r.URL.Query()
+
+	page, _ := strconv.Atoi(queryParams.Get("page"))
+	limit, _ := strconv.Atoi(queryParams.Get("limit"))
+	q := queryParams.Get("q")
+	sort := queryParams.Get("sort")
+	order := queryParams.Get("order")
+
+	// Defaults
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	// 🔐 Validar sort (evitar SQL injection)
+	validSort := map[string]bool{
+		"name":            true,
+		"current_episode": true,
+		"total_episodes":  true,
+	}
+
+	if !validSort[sort] {
+		sort = "id"
+	}
+
+	if order != "asc" && order != "desc" {
+		order = "asc"
+	}
+
+	// 🧩 Construir query dinámicamente
+	baseQuery := `
+	SELECT id, name, current_episode, total_episodes, image_url
+	FROM series
+	`
+
+	var args []interface{}
+	argIndex := 1
+
+	// 🔍 Búsqueda
+	if q != "" {
+		baseQuery += fmt.Sprintf(" WHERE name ILIKE $%d", argIndex)
+		args = append(args, "%"+q+"%")
+		argIndex++
+	}
+
+	// 🔽 Ordenamiento
+	baseQuery += fmt.Sprintf(" ORDER BY %s %s", sort, order)
+
+	// 📄 Paginación
+	baseQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
+	args = append(args, limit, offset)
+
+	// 🧪 Ejecutar
+	rows, err := database.DB.Query(baseQuery, args...)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Error fetching series")
 		return
 	}
 	defer rows.Close()
