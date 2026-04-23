@@ -50,4 +50,6 @@ func SetupRoutes() {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
+
+	http.HandleFunc("/upload", handlers.UploadImage)
 }

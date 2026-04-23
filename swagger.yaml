@@ -1,0 +1,119 @@
+openapi: 3.0.0
+
+info:
+  title: Series API
+  version: 1.0.0
+  description: API para gestionar series y ratings
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+
+  /series:
+    get:
+      summary: Obtener todas las series
+      responses:
+        '200':
+          description: Lista de series
+
+    post:
+      summary: Crear una nueva serie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                current_episode:
+                  type: integer
+                total_episodes:
+                  type: integer
+                image_url:
+                  type: string
+      responses:
+        '201':
+          description: Serie creada
+
+  /series/{id}:
+    get:
+      summary: Obtener serie por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Serie encontrada
+        '404':
+          description: No encontrada
+
+    put:
+      summary: Actualizar serie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Serie actualizada
+
+    delete:
+      summary: Eliminar serie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Eliminada
+
+  /series/{id}/rating:
+    get:
+      summary: Obtener rating promedio
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Rating
+
+    post:
+      summary: Agregar rating
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+      responses:
+        '201':
+          description: Rating agregado
+
+  /upload:
+    post:
+      summary: Subir imagen
+      responses:
+        '201':
+          description: Imagen subida
