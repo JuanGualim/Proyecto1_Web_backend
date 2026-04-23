@@ -72,3 +72,51 @@ func AddRating(w http.ResponseWriter, r *http.Request) {
 	})
 
 }
+
+func GetRating(w http.ResponseWriter, r *http.Request) {
+	utils.EnableCORS(w)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		utils.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	// Extraer ID
+	path := strings.TrimPrefix(r.URL.Path, "/series/")
+	parts := strings.Split(path, "/")
+
+	if len(parts) < 2 {
+		utils.Error(w, http.StatusBadRequest, "Invalid URL")
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	var average float64
+	var count int
+
+	query := `
+	SELECT COALESCE(AVG(rating), 0), COUNT(*)
+	FROM ratings
+	WHERE series_id = $1
+	`
+
+	err = database.DB.QueryRow(query, id).Scan(&average, &count)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, "Error fetching rating")
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, map[string]interface{}{
+		"average": average,
+		"count":   count,
+	})
+}
