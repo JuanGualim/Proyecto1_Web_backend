@@ -2,23 +2,43 @@ package routes
 
 import (
 	"net/http"
+	"strings"
 
 	"series-api/handlers"
 )
 
 func SetupRoutes() {
 
+	// 🔹 /series (GET + POST)
 	http.HandleFunc("/series", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			handlers.GetSeries(w, r)
-		} else if r.Method == http.MethodPost {
+		case http.MethodPost:
 			handlers.CreateSeries(w, r)
-		} else {
+		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 
+	// 🔹 /series/... (ID + rating)
 	http.HandleFunc("/series/", func(w http.ResponseWriter, r *http.Request) {
+
+		// ⭐ manejar rating
+		if strings.HasSuffix(r.URL.Path, "/rating") {
+
+			if r.Method == http.MethodPost {
+				handlers.AddRating(w, r)
+				return
+			}
+
+			if r.Method == http.MethodGet {
+				handlers.GetRating(w, r)
+				return
+			}
+		}
+
+		// 🔹 resto (ID)
 		switch r.Method {
 		case http.MethodGet:
 			handlers.GetSeriesByID(w, r)
