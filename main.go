@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"series-api/database"
 	"series-api/routes"
@@ -27,7 +28,12 @@ func main() {
 	})
 
 	fmt.Println("Server running on :8080")
-	http.ListenAndServe(":8080", corsMiddleware(http.DefaultServeMux))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	http.ListenAndServe(":"+port, corsMiddleware(http.DefaultServeMux))
 }
 
 func corsMiddleware(next http.Handler) http.Handler {

@@ -70,7 +70,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// URL pública
-	imageURL := fmt.Sprintf("http://localhost:8080/uploads/%s", filename)
+	imageURL := fmt.Sprintf("https://proyecto1webbackend-production-d655.up.railway.app/uploads/%s", filename)
 
 	utils.JSON(w, http.StatusCreated, map[string]string{
 		"url": imageURL,
